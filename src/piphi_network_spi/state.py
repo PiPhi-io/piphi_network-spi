@@ -11,6 +11,7 @@ from piphi_runtime_kit_python import (
     build_local_event_record,
     build_runtime_identity,
     create_runtime_starter,
+    schedule_telemetry_delivery,
     validate_typed_configs,
 )
 
@@ -53,8 +54,15 @@ starter = create_runtime_starter(
 runtime = starter.runtime
 registry = starter.registry
 config_sync = starter.config_sync
+telemetry_client = starter.telemetry_client
 capabilities = MANIFEST.get("capabilities", {})
 commands = MANIFEST.get("commands", {})
+
+TELEMETRY_UNITS = {
+    key: value["unit"]
+    for key, value in capabilities.items()
+    if isinstance(value, dict) and value.get("kind") == "sensor" and value.get("unit")
+}
 
 
 def config_to_sensor_config(config: SPISensorRuntimeConfig) -> SensorConfig:
@@ -149,6 +157,28 @@ def append_runtime_event(
     return event
 
 
+def schedule_state_telemetry(entry: dict[str, Any], state: dict[str, Any]) -> None:
+    metrics = {
+        key: value
+        for key, value in state.items()
+        if key not in {"error", "sampled_at"}
+        and isinstance(value, (bool, int, float, str))
+    }
+    if not metrics:
+        return
+    schedule_telemetry_delivery(
+        process_state=runtime.process_state,
+        telemetry_client=telemetry_client,
+        auth_context=runtime.auth,
+        config_id=str(entry["config_id"]),
+        device_id=str(entry["device_id"]),
+        container_id=entry.get("container_id"),
+        metrics=metrics,
+        units={key: TELEMETRY_UNITS[key] for key in metrics if key in TELEMETRY_UNITS},
+        timestamp=str(state.get("sampled_at")) if state.get("sampled_at") else None,
+    )
+
+
 async def apply_config(config: SPISensorRuntimeConfig) -> None:
     entry = entry_for_config(config)
     registry.set(config.id, entry)
@@ -157,6 +187,7 @@ async def apply_config(config: SPISensorRuntimeConfig) -> None:
     except Exception as exc:
         state = {"connected": False, "error": str(exc)}
     registry.update_state(config.id, state, device_id=entry["device_id"])
+    schedule_state_telemetry(entry, state)
     append_runtime_event("spi.config.applied", entry, {"sensor_model": config.sensor_model})
 
 

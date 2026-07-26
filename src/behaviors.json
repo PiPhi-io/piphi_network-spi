@@ -1,0 +1,122 @@
+{
+  "behaviorSchemaVersion": "integration.behaviors.v2",
+  "devices": [
+    {
+      "id": "spi_environmental_sensor",
+      "name": "SPI Environmental Sensor",
+      "description": "Environmental sensors connected through a local SPI adapter.",
+      "deviceClass": "environmental_sensor",
+      "entityType": "sensor",
+      "capabilities": [
+        "connected",
+        "temperature_c",
+        "humidity_percent",
+        "pressure_hpa",
+        "gas_ohms",
+        "refresh"
+      ],
+      "intents": [
+        {
+          "id": "monitor_environment",
+          "label": "Monitor the environment",
+          "description": "React to temperature, humidity, pressure, and gas-resistance changes."
+        }
+      ],
+      "triggers": [
+        {
+          "id": "state_changed",
+          "label": "Sensor reading changes",
+          "description": "Start when Core records changed SPI sensor capabilities.",
+          "capability": "telemetry.state",
+          "runtime": {
+            "event": "device.state_changed",
+            "source": "integration"
+          },
+          "freshness": {
+            "maxAgeSeconds": 180,
+            "staleDataMode": "block"
+          },
+          "ui": {
+            "group": "when"
+          }
+        }
+      ],
+      "conditions": [
+        {
+          "id": "connected",
+          "label": "Sensor is connected",
+          "type": "boolean",
+          "capability": "sensor.connected",
+          "operators": ["eq", "neq"],
+          "runtime": {"source": "state", "field": "connected", "operator": "eq"},
+          "ui": {"group": "only_if"}
+        },
+        {
+          "id": "temperature_threshold",
+          "label": "Temperature threshold",
+          "type": "number",
+          "capability": "sensor.temperature_c",
+          "operators": [">", ">=", "<", "<=", "eq"],
+          "runtime": {"source": "state", "field": "temperature_c", "operator": ">"},
+          "ui": {"group": "only_if"}
+        },
+        {
+          "id": "humidity_threshold",
+          "label": "Humidity threshold",
+          "type": "number",
+          "capability": "sensor.humidity_percent",
+          "operators": [">", ">=", "<", "<=", "eq"],
+          "runtime": {"source": "state", "field": "humidity_percent", "operator": ">"},
+          "ui": {"group": "only_if"}
+        },
+        {
+          "id": "pressure_threshold",
+          "label": "Pressure threshold",
+          "type": "number",
+          "capability": "sensor.pressure_hpa",
+          "operators": [">", ">=", "<", "<=", "eq"],
+          "runtime": {"source": "state", "field": "pressure_hpa", "operator": ">"},
+          "ui": {"group": "only_if"}
+        },
+        {
+          "id": "gas_resistance_threshold",
+          "label": "Gas resistance threshold",
+          "type": "number",
+          "capability": "sensor.gas_ohms",
+          "operators": [">", ">=", "<", "<=", "eq"],
+          "runtime": {"source": "state", "field": "gas_ohms", "operator": "<"},
+          "ui": {"group": "only_if"}
+        }
+      ],
+      "actions": [
+        {
+          "id": "refresh",
+          "label": "Refresh sensor now",
+          "description": "Read the selected SPI sensor immediately.",
+          "capability": "device.refresh",
+          "runtime": {"command": "refresh"},
+          "failure": {
+            "strategy": "retry_then_continue",
+            "retry": {"maxAttempts": 1, "delaySeconds": 1, "backoff": "fixed"},
+            "timeoutSeconds": 10,
+            "idempotent": true
+          },
+          "safety": {"riskLevel": "low"},
+          "ui": {"group": "do_this"}
+        }
+      ],
+      "freshness": {"maxAgeSeconds": 180, "staleDataMode": "block"},
+      "ui": {"icon": "thermometer", "category": "environmental_sensor"}
+    }
+  ],
+  "templates": [],
+  "telemetry": {
+    "capabilityMappings": [
+      {"nativeMetric": "connected", "capability": "sensor.connected"},
+      {"nativeMetric": "temperature_c", "capability": "sensor.temperature_c"},
+      {"nativeMetric": "humidity_percent", "capability": "sensor.humidity_percent"},
+      {"nativeMetric": "pressure_hpa", "capability": "sensor.pressure_hpa"},
+      {"nativeMetric": "gas_ohms", "capability": "sensor.gas_ohms"}
+    ]
+  }
+}

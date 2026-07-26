@@ -167,3 +167,35 @@ def test_entities_include_gas_capability_for_bme680(
 
     assert response.status_code == 200
     assert "gas_ohms" in response.json()["entities"][0]["capabilities"]
+
+
+def test_state_telemetry_uses_stable_runtime_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(
+        state_module,
+        "schedule_telemetry_delivery",
+        lambda **kwargs: captured.update(kwargs),
+    )
+
+    state_module.schedule_state_telemetry(
+        {
+            "config_id": "spi-config-1",
+            "device_id": "spi-device-1",
+            "container_id": "container-1",
+        },
+        {
+            "connected": True,
+            "pressure_hpa": 1013.2,
+            "sampled_at": "2026-07-26T12:00:00Z",
+            "error": "not forwarded",
+        },
+    )
+
+    assert captured["config_id"] == "spi-config-1"
+    assert captured["device_id"] == "spi-device-1"
+    assert captured["container_id"] == "container-1"
+    assert captured["metrics"] == {"connected": True, "pressure_hpa": 1013.2}
+    assert captured["units"] == {"connected": "bool", "pressure_hpa": "hPa"}
+    assert captured["timestamp"] == "2026-07-26T12:00:00Z"

@@ -10,6 +10,7 @@ from ..state import (
     primary_config,
     registry,
     read_state,
+    schedule_state_telemetry,
 )
 
 router = APIRouter(tags=["commands"])
@@ -31,9 +32,11 @@ async def command(payload: IntegrationCommandRequest) -> dict[str, object]:
                 {"connected": False, "error": str(exc)},
                 device_id=(entry or {}).get("device_id"),
             )
+            schedule_state_telemetry(entry, {"connected": False})
             append_runtime_event("spi.sensor.refresh_failed", entry, {"command": payload.command, "error": str(exc)})
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     registry.update_state(config.id, state_payload, device_id=(entry or {}).get("device_id"))
     if entry:
+        schedule_state_telemetry(entry, state_payload)
         append_runtime_event("spi.sensor.refreshed", entry, {"command": payload.command})
     return {"ok": True, "state": state_payload}
