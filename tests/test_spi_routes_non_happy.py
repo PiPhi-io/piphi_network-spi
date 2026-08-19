@@ -113,6 +113,35 @@ def test_command_rejects_unsupported_command(client: TestClient) -> None:
     assert "Unsupported command" in response.text
 
 
+def test_command_refresh_replays_without_repeating_sensor_read(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("PIPHI_ALLOW_MOCK_HARDWARE", "true")
+    assert client.post(
+        "/config",
+        json={"id": "spi-idempotent", "adapter": "mock", "sensor_model": "bme680"},
+    ).status_code == 200
+    reads = 0
+
+    def fake_read_state(_config):
+        nonlocal reads
+        reads += 1
+        return {"connected": True, "temperature_c": 21.5}
+
+    monkeypatch.setattr(command_routes, "read_state", fake_read_state)
+    headers = {"X-PiPhi-Idempotency-Key": "spi-refresh-idempotency-1"}
+    payload = {"command": "refresh", "device_id": "spi-idempotent"}
+    first = client.post("/command", json=payload, headers=headers)
+    replay = client.post("/command", json=payload, headers=headers)
+
+    assert first.status_code == 200
+    assert replay.status_code == 200
+    assert first.json()["replayed"] is False
+    assert replay.json()["replayed"] is True
+    assert reads == 1
+
+
 def test_deconfigure_after_config_returns_removed_true_and_clears_state(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
