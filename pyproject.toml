@@ -5,7 +5,7 @@ description = "PiPhi integration runtime for local SPI environmental sensors."
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115.0",
-  "piphi-runtime-kit-python==0.6.0",
+  "piphi-runtime-kit-python==0.7.1",
   "uvicorn[standard]>=0.30.0",
 ]
 
