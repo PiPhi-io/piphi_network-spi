@@ -23,6 +23,19 @@ pdm run piphi_network_spi
 
 The API listens on port `3675` by default.
 
+## Container
+
+The release image includes the Linux SPI and FT232H hardware dependencies:
+
+```bash
+docker run --rm --privileged -p 3675:3675 piphinetwork/spi-integration:0.1.0
+```
+
+Direct SPI and USB bridge discovery require access to host device nodes. The
+integration manifest therefore declares the Linux container as privileged, and
+PiPhi should surface that elevated hardware-access requirement during install.
+Mock hardware remains disabled in the release image.
+
 ## Configuration
 
 - `adapter`: `linux_spi`, `ft232h`, or `mock`
