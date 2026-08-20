@@ -9,16 +9,28 @@
     "website": "https://github.com/PiPhi-io"
   },
   "license": "Apache-2.0",
-  "image": "local/piphi-network-spi",
+  "image": "piphinetwork/spi-integration:0.1.0",
   "platforms": ["linux"],
   "runtime": {
     "linux": {
-      "type": "proxy",
-      "proxy": {
-        "port": 3675
+      "type": "container",
+      "container": {
+        "image": "piphinetwork/spi-integration:0.1.0",
+        "ports": [
+          {"container": 3675, "host": 3675}
+        ],
+        "environment": {
+          "PIPHI_SPI_PORT": "3675",
+          "PIPHI_ALLOW_MOCK_HARDWARE": "false"
+        },
+        "privileged": true,
+        "restart_policy": {
+          "name": "unless-stopped",
+          "maximum_retry_count": 0
+        }
       },
       "discovery": {
-        "method": "proxy",
+        "method": "direct",
         "inputs": [
           {"name": "adapter", "label": "Adapter", "type": "select", "required": true, "options": ["linux_spi", "ft232h", "mock"], "description": "Use linux_spi for direct GPIO headers, ft232h for the Adafruit USB bridge, or mock only when PIPHI_ALLOW_MOCK_HARDWARE=true."},
           {"name": "bus", "label": "SPI Bus", "type": "number", "required": true, "placeholder": "0"},
