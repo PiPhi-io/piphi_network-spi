@@ -19,7 +19,7 @@ from .sensors import SensorConfig, discover_devices, hardware_diagnostics, norma
 
 INTEGRATION_ID = "piphi-network-spi"
 INTEGRATION_NAME = "PiPhi Network SPI Sensors"
-INTEGRATION_VERSION = "0.1.0"
+INTEGRATION_VERSION = "0.1.1"
 
 MANIFEST_PATH = Path(__file__).resolve().parents[1] / "manifest.json"
 MANIFEST = json.loads(MANIFEST_PATH.read_text())
@@ -207,6 +207,17 @@ def read_current_state() -> dict[str, Any]:
         except Exception as exc:
             return {"state": {"connected": False, "error": str(exc)}}
     return {"entries": registry.entries, "state_snapshots": registry.state_snapshots}
+
+
+def refresh_all_state() -> None:
+    for config_id in registry.ids():
+        entry = get_entry_or_404(config_id)
+        config = SPISensorRuntimeConfig.model_validate(entry["config"])
+        state_payload = read_state(config_to_sensor_config(config))
+        registry.update_state(config_id, state_payload)
+
+
+starter.state.provide(refresh_all_state, source=INTEGRATION_ID)
 
 
 def diagnostics_payload() -> dict[str, Any]:

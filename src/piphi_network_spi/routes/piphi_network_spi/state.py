@@ -18,7 +18,7 @@ from .sensors import SensorConfig, discover_devices, hardware_diagnostics, norma
 
 INTEGRATION_ID = "piphi-network-spi"
 INTEGRATION_NAME = "PiPhi Network SPI Sensors"
-INTEGRATION_VERSION = "0.1.0"
+INTEGRATION_VERSION = "0.1.1"
 
 MANIFEST_PATH = Path(__file__).resolve().parents[1] / "manifest.json"
 MANIFEST = json.loads(MANIFEST_PATH.read_text())
