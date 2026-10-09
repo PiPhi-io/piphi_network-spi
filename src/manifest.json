@@ -256,5 +256,10 @@
         "default_widget": "sensor-card"
       }
     }
-  ]
+  ],
+  "ui": {
+    "experience_packages": [
+      {"registry_id": "io.piphi.spi-environment", "version_range": ">=0.1,<1", "auto_install": true}
+    ]
+  }
 }
