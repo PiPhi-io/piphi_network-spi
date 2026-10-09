@@ -2,14 +2,14 @@
   "manifest_version": "1.0",
   "id": "piphi-network-spi",
   "name": "PiPhi Network SPI Sensors",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Local SPI environmental sensor integration for BME680, BME280, BMP280, and compatible SPI sensor boards.",
   "maintainer": {
     "name": "PiPhi Integrations Team",
     "website": "https://github.com/PiPhi-io"
   },
   "license": "Apache-2.0",
-  "image": "piphinetwork/spi-integration:0.1.2",
+  "image": "piphinetwork/spi-integration:0.1.3",
   "platforms": [
     "linux"
   ],
@@ -17,7 +17,7 @@
     "linux": {
       "type": "container",
       "container": {
-        "image": "piphinetwork/spi-integration:0.1.2",
+        "image": "piphinetwork/spi-integration:0.1.3",
         "ports": [
           {
             "container": 3675,
