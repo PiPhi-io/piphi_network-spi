@@ -9,6 +9,7 @@ from pathlib import Path
 
 SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 PYPROJECT_VERSION_RE = re.compile(r'(?m)^(version\s*=\s*")([^"]+)(")$')
+EXPERIENCE_VERSION_RE = re.compile(r'("identity"\s*:\s*\{.*?"version"\s*:\s*")[^"]+("\s*\})', re.DOTALL)
 
 
 def parse_version(value: str) -> tuple[int, int, int]:
@@ -53,6 +54,7 @@ def main() -> int:
     root = Path(__file__).resolve().parents[1]
     pyproject_path = root / "pyproject.toml"
     manifest_path = root / "src" / "manifest.json"
+    experience_path = root / "experiences" / "environment" / "package.source.json"
     pyproject_text = pyproject_path.read_text(encoding="utf-8")
     match = PYPROJECT_VERSION_RE.search(pyproject_text)
     if match is None:
@@ -76,6 +78,14 @@ def main() -> int:
     update_manifest_image(manifest, args.docker_image, version)
     pyproject_path.write_text(updated, encoding="utf-8")
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    if experience_path.exists():
+        experience_text = experience_path.read_text(encoding="utf-8")
+        updated_experience, count = EXPERIENCE_VERSION_RE.subn(
+            rf"\g<1>{version}\g<2>", experience_text, count=1
+        )
+        if count != 1:
+            raise ValueError(f"Unable to update experience version in {experience_path}")
+        experience_path.write_text(updated_experience, encoding="utf-8")
     print(version)
     return 0
 
