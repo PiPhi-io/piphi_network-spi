@@ -13,7 +13,7 @@ dependencies = [
 hardware = [
   "spidev>=3.6",
   "bme680 @ git+https://github.com/pimoroni/bme680-python.git",
-  "bme280 @ git+https://github.com/pimoroni/bme280-python.git",
+  "pimoroni-bme280 @ git+https://github.com/pimoroni/bme280-python.git",
   "adafruit-circuitpython-bme280>=2.6.0",
   "adafruit-circuitpython-bme680>=3.7.0",
   "adafruit-blinka>=8.0.0",
